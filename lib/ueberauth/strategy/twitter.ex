@@ -3,7 +3,7 @@ defmodule Ueberauth.Strategy.Twitter do
   Twitter Strategy for Überauth.
   """
 
-  use Ueberauth.Strategy, uid_field: :id_str
+  use Ueberauth.Strategy, uid_field: :id
 
   alias Ueberauth.Auth.Credentials
   alias Ueberauth.Auth.Extra
@@ -75,13 +75,13 @@ defmodule Ueberauth.Strategy.Twitter do
 
     %Info{
       email: user["email"],
-      image: user["profile_image_url_https"],
+      image: user["profile_image_url"],
       name: user["name"],
-      nickname: user["screen_name"],
+      nickname: user["username"],
       description: user["description"],
       location: user["location"],
       urls: %{
-        Twitter: "https://twitter.com/#{user["screen_name"]}",
+        Twitter: "https://twitter.com/#{user["username"]}",
         Website: user["url"]
       }
     }
@@ -102,16 +102,19 @@ defmodule Ueberauth.Strategy.Twitter do
   end
 
   defp fetch_user(conn, token) do
-    params = [{"include_entities", false}, {"skip_status", true}, {"include_email", true}]
+    params = [
+      {"user.fields",
+       "created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,verified_type,withheld"}
+    ]
 
-    case OAuth.get("/1.1/account/verify_credentials.json", params, token) do
+    case OAuth.get("/2/users/me", params, token) do
       {:ok, %{status_code: 401, body: _, headers: _}} ->
         set_errors!(conn, [error("token", "unauthorized")])
 
       {:ok, %{status_code: status_code, body: body, headers: _}} when status_code in 200..399 ->
         conn
         |> put_private(:twitter_token, token)
-        |> put_private(:twitter_user, body)
+        |> put_private(:twitter_user, body["data"])
 
       {:ok, %{status_code: _, body: body, headers: _}} ->
         error = List.first(body["errors"])

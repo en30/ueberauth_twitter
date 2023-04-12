@@ -27,7 +27,7 @@ defmodule UeberauthTwitter.Mixfile do
   defp deps do
     [
       {:httpoison, "~> 1.0"},
-      {:oauther, "~> 1.1"},
+      {:oauther, github: "tobstarr/oauther", ref: "e81fc6588e52eeaf41cdf51ed9d968da46b0b67d"},
       {:ueberauth, "~> 0.7"},
 
       # dev/test dependencies
